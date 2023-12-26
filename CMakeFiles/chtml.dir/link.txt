@@ -1,1 +1,0 @@
-/usr/bin/cc CMakeFiles/chtml.dir/src/tokenizer.c.o -o chtml 
