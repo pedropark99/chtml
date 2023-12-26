@@ -1,0 +1,3 @@
+/mnt/c/users/pedro/Documents/Projetos/Packages/chtml/CMakeFiles/chtml.dir
+/mnt/c/users/pedro/Documents/Projetos/Packages/chtml/CMakeFiles/edit_cache.dir
+/mnt/c/users/pedro/Documents/Projetos/Packages/chtml/CMakeFiles/rebuild_cache.dir
