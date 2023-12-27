@@ -23,65 +23,88 @@ void tokenizer(TokensArray* tokens, char* input_string)
         printf("[WARN]: Input string seems to be empty!");
     }
 
-    char current_char = ' ';
     Token previous_token = {0, 0, EMPTY_TOKEN};
     bool inside_string = false;
+    int current_state = 0;
     int lexeme_begin = 0;
     
     for (int current_index = 0; current_index < strlen(input_string); current_index++)
     {
-        current_char = input_string[current_index];
-        if (inside_string) {
-            while (current_index < strlen(input_string))
-            {
-                if (input_string[current_index] == '"')
-                    break;
-                current_index++;
-            }
-
-            insert_token(tokens, token(lexeme_begin, current_index - 1, HTML_TEXT));
-            insert_token(tokens, token(current_index, current_index, QUOTATION_MARK));
-            lexeme_begin = current_index + 1;
-            inside_string = false;
-            continue;
-        }
-
-        if (!inside_string && current_char == '"') {
-            inside_string = true;
-            insert_token(tokens, token(lexeme_begin, current_index, QUOTATION_MARK));
-            lexeme_begin = current_index + 1;
-            continue;
-        }
-        
-        if (current_char == '<') {
-            insert_token(tokens, token(lexeme_begin, current_index, LESSER_THAN_SIGN));
+        if (input_string[current_index] == '<') {
+            insert_token(tokens, token(current_index, current_index, LESSER_THAN_SIGN));
             lexeme_begin = current_index + 1;
             // Advance to the next space, to get the HTML element identifier
             while (current_index < strlen(input_string))
             {
-                if (input_string[current_index] == ' ')
+                if (input_string[current_index] == ' '
+                    || input_string[current_index] == '>'
+                    || input_string[current_index] == '/') {
+
                     break;
+                }
                 current_index++;
             }
-
             insert_token(tokens, token(lexeme_begin, current_index - 1, HTML_IDENTIFIER));
             lexeme_begin = current_index + 1;
-            continue;
-        }
 
-        if (current_char == '>') {
-            insert_token(tokens, token(lexeme_begin, current_index, GREATER_THAN_SIGN));
-            lexeme_begin = current_index + 1;
-            continue;
-        }
+            if (input_string[current_index] == '>')
+            {
+                insert_token(tokens, token(current_index, current_index, GREATER_THAN_SIGN));
+                lexeme_begin = current_index + 1;
+                continue;
+            }
 
-        if (current_char == '=') {
-            insert_token(tokens, token(lexeme_begin, current_index - 1, HTML_ATTRIBUTE_KEY));
-            insert_token(tokens, token(current_index, current_index, EQUAL_SIGN));
-            lexeme_begin = current_index + 1;
-            continue;
+            // Tokenize the remainder of the current HTML element
+            while (current_index < strlen(input_string))
+            {
+                if (!inside_string && input_string[current_index] == '>') {
+                    insert_token(tokens, token(current_index, current_index, GREATER_THAN_SIGN));
+                    lexeme_begin = current_index + 1;
+                    break;
+                }
+
+                if (inside_string) {
+                    if (input_string[current_index] == '"') {
+                        insert_token(tokens, token(lexeme_begin, current_index - 1, HTML_TEXT));
+                        insert_token(tokens, token(current_index, current_index, QUOTATION_MARK));
+                        lexeme_begin = current_index + 1;
+                        inside_string = false;
+                    }
+
+                    current_index++; continue;
+                }
+
+
+
+                if (!inside_string && input_string[current_index] == '=') {
+                    insert_token(tokens, token(current_index, current_index, EQUAL_SIGN));
+                    lexeme_begin = current_index + 1;
+                    current_index++; continue;
+                }
+                if (!inside_string && input_string[current_index] == '/') {
+                    insert_token(tokens, token(current_index, current_index, FORWARD_SLASH));
+                    lexeme_begin = current_index + 1;
+                    current_index++; continue;                  
+                }
+                if (!inside_string && input_string[current_index] == '"') {
+                    inside_string = true;
+                    insert_token(tokens, token(lexeme_begin, current_index, QUOTATION_MARK));
+                    lexeme_begin = current_index + 1;
+                    current_index++; continue;
+                }
+
+                if (!inside_string &&
+                    (current_index + 1) < strlen(input_string) &&
+                    input_string[current_index + 1] == '=') {
+                    
+                    insert_token(tokens, token(lexeme_begin, current_index, HTML_ATTRIBUTE_KEY));
+                    lexeme_begin = current_index + 1;
+                    current_index++; continue;
+                }
+                    
+                current_index++;
+            }
         }
- 
    }
 
 }
@@ -196,6 +219,9 @@ char* token_type_to_str(enum TokenType type)
             break;
         case HTML_ATTRIBUTE_KEY:
             strcpy(str, "HAK");
+            break;
+        case FORWARD_SLASH:
+            strcpy(str, "FOS");
             break;
     }
 
