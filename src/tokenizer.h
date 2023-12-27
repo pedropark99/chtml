@@ -6,6 +6,7 @@ char* HTML_EXAMPLE = "<!DOCTYPE html>\n"
     "<head>\n"
     "  <meta charset=\"utf-8\">\n" 
     "  <meta name=\"description\" content=\"Neovim user documentation\">\n"
+    "  <title>Welcome to Neovim user documentation!<title/>\n"
     "<head/>\n"
     "<html/>\n\0"
 ;
@@ -21,6 +22,7 @@ enum TokenType {
     HTML_ATTRIBUTE_KEY = 207,
     HTML_ATTRIBUTE_VALUE = 208,
     FORWARD_SLASH = 210,
+    NEW_LINE = 211,
     EMPTY_TOKEN = 206
 };
 

@@ -85,9 +85,9 @@ void tokenizer(TokensArray* tokens, char* input_string)
                     current_index++; continue;
                 }
 
-                if (!inside_string &&
-                    (current_index + 1) < strlen(input_string) &&
-                    input_string[current_index + 1] == '=') {
+                if (!inside_string 
+                    && (current_index + 1) < strlen(input_string)
+                    && input_string[current_index + 1] == '=') {
                     
                     insert_token(tokens, token(lexeme_begin, current_index, HTML_ATTRIBUTE_KEY));
                     lexeme_begin = current_index + 1;
@@ -96,6 +96,22 @@ void tokenizer(TokensArray* tokens, char* input_string)
                     
                 current_index++;
             }
+        }
+
+        if (!inside_string && input_string[current_index] == '\n') {
+            insert_token(tokens, token(current_index, current_index, NEW_LINE));
+            lexeme_begin = current_index + 1;
+            continue;
+        }
+
+
+        if (!inside_string 
+            && (current_index + 1) < strlen(input_string)
+            && input_string[current_index + 1] == '<') {
+            
+            // Text content of a HTML element
+            insert_token(tokens, token(lexeme_begin, current_index, HTML_TEXT));
+            lexeme_begin = current_index + 1;
         }
    }
 
@@ -214,6 +230,9 @@ char* token_type_to_str(enum TokenType type)
             break;
         case FORWARD_SLASH:
             strcpy(str, "FOS");
+            break;
+        case NEW_LINE:
+            strcpy(str, "NEL");
             break;
     }
 
