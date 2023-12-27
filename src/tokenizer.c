@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdbool.h>
 
 #include "tokenizer.h"
 
@@ -14,6 +15,7 @@ char CHARACTER_DELIMITERS[] = {
 };
 
 
+
 void tokenizer(TokensArray* tokens, char* input_string)
 {
     if (strlen(input_string) == 0)
@@ -21,65 +23,89 @@ void tokenizer(TokensArray* tokens, char* input_string)
         printf("[WARN]: Input string seems to be empty!");
     }
 
-    char current_char = input_string[0];
-    Token current_token = {0, 0};
-    int last_index = 0;
-
+    char current_char = ' ';
+    Token previous_token = {0, 0, EMPTY_TOKEN};
+    bool inside_string = false;
+    int lexeme_begin = 0;
     
-    if (current_char == '<')
+    for (int current_index = 0; current_index < strlen(input_string); current_index++)
     {
-        insert_token(tokens, token(last_index, 0));
-        last_index++;
-    }
-
-    for (int i = 1; i < strlen(input_string); i++)
-    {
-        current_char = input_string[i];
-        if (char_is_delimiter(current_char))
-        {
-            if (last_index == i)
+        current_char = input_string[current_index];
+        if (inside_string) {
+            while (current_index < strlen(input_string))
             {
-                // Both previous and current character are delimiters
-                insert_token(tokens, token(last_index, i));
-            } else {
-                insert_token(tokens, token(last_index, i - 1));
-                insert_token(tokens, token(i, i));
+                if (input_string[current_index] == '"')
+                    break;
+                current_index++;
             }
 
-            last_index = i + 1;
+            insert_token(tokens, token(lexeme_begin, current_index - 1, HTML_TEXT));
+            insert_token(tokens, token(current_index, current_index, QUOTATION_MARK));
+            lexeme_begin = current_index + 1;
+            inside_string = false;
+            continue;
         }
-    }
+
+        if (!inside_string && current_char == '"') {
+            inside_string = true;
+            insert_token(tokens, token(lexeme_begin, current_index, QUOTATION_MARK));
+            lexeme_begin = current_index + 1;
+            continue;
+        }
+        
+        if (current_char == '<') {
+            insert_token(tokens, token(lexeme_begin, current_index, OPEN_LESS_THAN));
+            lexeme_begin = current_index + 1;
+            // Advance to the next space, to get the HTML element identifier
+            while (current_index < strlen(input_string))
+            {
+                if (input_string[current_index] == ' ')
+                    break;
+                current_index++;
+            }
+
+            insert_token(tokens, token(lexeme_begin, current_index - 1, HTML_IDENTIFIER));
+            lexeme_begin = current_index + 1;
+            continue;
+        }
+
+        if (current_char == '>') {
+            insert_token(tokens, token(lexeme_begin, current_index, CLOSE_LESS_THAN));
+            lexeme_begin = current_index + 1;
+            continue;
+        }
+
+
+        if (current_char == '=') {
+            insert_token(tokens, token(lexeme_begin, current_index, EQUAL_SIGN));
+            lexeme_begin = current_index + 1;
+            continue;
+        }
+ 
+   }
 
 }
 
 
 
-int char_is_delimiter(char input_char)
+
+
+
+
+Token token(int start_index, int end_index, enum TokenType token_type)
 {
-    size_t n_delimiters = sizeof(CHARACTER_DELIMITERS)/sizeof(CHARACTER_DELIMITERS[0]);
-    for (int i = 0; i < n_delimiters; i++)
-    {
-         if (input_char == CHARACTER_DELIMITERS[i])
-         {
-            return 1;
-         }
-    }
-
-    return 0;
-}
-
-
-
-
-Token token(int start_index, int end_index)
-{
-    Token t = {start_index, end_index};
+    Token t = {start_index, end_index, token_type};
     return t;
 }
 
 void print_token(Token *token)
 {
-    printf("[Token]: start=%d, end=%d\n", token->start_index, token->end_index);
+    printf(
+        "[Token]: start=%d, end=%d, type=%d\n", 
+        token->start_index, 
+        token->end_index, 
+        token->token_type
+    );
 }
 
 
@@ -107,7 +133,28 @@ void free_tokens_array(TokensArray* array)
     array->size = 0;
 }
 
+Token get_last_token(TokensArray* array)
+{
+    if (array->space_used == 0) {
+        Token tok = {0, 0, EMPTY_TOKEN};
+        return tok;
+    }
 
+    return array->tokens[array->space_used - 1];
+}
+
+
+void print_lexeme(Token token)
+{
+    int length = token.end_index - token.start_index + 2;
+    char text[length];
+    text[length - 1] = '\0';
+    for (int i = 0; i < (length - 1); i++)
+    {
+        text[i] = HTML_EXAMPLE[token.start_index + i];
+    }
+    printf("Token content: %s\n", text);
+}
 
 
 
@@ -122,7 +169,7 @@ int main()
     for (int i = 0; i < tokens.space_used; i++)
     {
         Token tok = tokens.tokens[i];
-        print_token(&tok);
+        print_lexeme(tok);
     }
 
     free_tokens_array(&tokens);
