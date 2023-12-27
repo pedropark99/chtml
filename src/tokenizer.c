@@ -8,6 +8,12 @@
 #define DEFAULT_TOKENS_ARRAY_SIZE 450
 
 
+char CHARACTER_DELIMITERS[] = {
+    '<', '>', '=', '"', ',',
+    '\n'
+};
+
+
 void tokenizer(TokensArray* tokens, char* input_string)
 {
     if (strlen(input_string) == 0)
@@ -26,18 +32,42 @@ void tokenizer(TokensArray* tokens, char* input_string)
         last_index++;
     }
 
-    for (int i = 0; i < strlen(input_string); i++)
+    for (int i = 1; i < strlen(input_string); i++)
     {
         current_char = input_string[i];
-        if (current_char == '<')
+        if (char_is_delimiter(current_char))
         {
-            insert_token(tokens, token(last_index, i - 1));
-            insert_token(tokens, token(i, i));
-            last_index++;
+            if (last_index == i)
+            {
+                // Both previous and current character are delimiters
+                insert_token(tokens, token(last_index, i));
+            } else {
+                insert_token(tokens, token(last_index, i - 1));
+                insert_token(tokens, token(i, i));
+            }
+
+            last_index = i + 1;
         }
     }
 
 }
+
+
+
+int char_is_delimiter(char input_char)
+{
+    size_t n_delimiters = sizeof(CHARACTER_DELIMITERS)/sizeof(CHARACTER_DELIMITERS[0]);
+    for (int i = 0; i < n_delimiters; i++)
+    {
+         if (input_char == CHARACTER_DELIMITERS[i])
+         {
+            return 1;
+         }
+    }
+
+    return 0;
+}
+
 
 
 

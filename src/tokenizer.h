@@ -22,6 +22,9 @@ typedef struct {
 } TokensArray;
 
 
+int char_is_delimiter(char input_char);
+
+
 Token token(int start_index, int end_index);
 void print_token(Token* token);
 
