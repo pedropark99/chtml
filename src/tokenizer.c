@@ -9,12 +9,6 @@
 #define DEFAULT_TOKENS_ARRAY_SIZE 450
 
 
-char CHARACTER_DELIMITERS[] = {
-    '<', '>', '=', '"', ',',
-    '\n'
-};
-
-
 
 void tokenizer(TokensArray* tokens, char* input_string)
 {
@@ -23,11 +17,9 @@ void tokenizer(TokensArray* tokens, char* input_string)
         printf("[WARN]: Input string seems to be empty!");
     }
 
-    Token previous_token = {0, 0, EMPTY_TOKEN};
     bool inside_string = false;
-    int current_state = 0;
     int lexeme_begin = 0;
-    
+
     for (int current_index = 0; current_index < strlen(input_string); current_index++)
     {
         if (input_string[current_index] == '<') {
