@@ -54,7 +54,7 @@ void tokenizer(TokensArray* tokens, char* input_string)
         }
         
         if (current_char == '<') {
-            insert_token(tokens, token(lexeme_begin, current_index, OPEN_LESS_THAN));
+            insert_token(tokens, token(lexeme_begin, current_index, LESSER_THAN_SIGN));
             lexeme_begin = current_index + 1;
             // Advance to the next space, to get the HTML element identifier
             while (current_index < strlen(input_string))
@@ -70,14 +70,14 @@ void tokenizer(TokensArray* tokens, char* input_string)
         }
 
         if (current_char == '>') {
-            insert_token(tokens, token(lexeme_begin, current_index, CLOSE_LESS_THAN));
+            insert_token(tokens, token(lexeme_begin, current_index, GREATER_THAN_SIGN));
             lexeme_begin = current_index + 1;
             continue;
         }
 
-
         if (current_char == '=') {
-            insert_token(tokens, token(lexeme_begin, current_index, EQUAL_SIGN));
+            insert_token(tokens, token(lexeme_begin, current_index - 1, HTML_ATTRIBUTE_KEY));
+            insert_token(tokens, token(current_index, current_index, EQUAL_SIGN));
             lexeme_begin = current_index + 1;
             continue;
         }
@@ -96,16 +96,6 @@ Token token(int start_index, int end_index, enum TokenType token_type)
 {
     Token t = {start_index, end_index, token_type};
     return t;
-}
-
-void print_token(Token *token)
-{
-    printf(
-        "[Token]: start=%d, end=%d, type=%d\n", 
-        token->start_index, 
-        token->end_index, 
-        token->token_type
-    );
 }
 
 
@@ -144,18 +134,73 @@ Token get_last_token(TokensArray* array)
 }
 
 
-void print_lexeme(Token token)
+void print_token(Token *token)
 {
-    int length = token.end_index - token.start_index + 2;
-    char text[length];
+    char* text = get_token_lexeme(token);
+    printf(
+        "[Token]: start=%d, end=%d, type=%s, content=%s\n", 
+        token->start_index, 
+        token->end_index, 
+        token_type_to_str(token->token_type), 
+        text
+    );
+    free(text);
+}
+
+char* get_token_lexeme(Token* token)
+{
+    int length = token->end_index - token->start_index + 2;
+    char* text = malloc(length);
     text[length - 1] = '\0';
     for (int i = 0; i < (length - 1); i++)
     {
-        text[i] = HTML_EXAMPLE[token.start_index + i];
+        text[i] = HTML_EXAMPLE[token->start_index + i];
     }
-    printf("Token content: %s\n", text);
+    return text;
 }
 
+void print_lexeme(Token token)
+{
+    char* text = get_token_lexeme(&token);
+    printf("Token content: %s\n", text);
+    free(text);
+}
+
+char* token_type_to_str(enum TokenType type)
+{
+    static char str[4];
+    switch (type) {
+        case EQUAL_SIGN:
+            strcpy(str, "EQS");
+            break;
+        case LESSER_THAN_SIGN:
+            strcpy(str, "LTS");
+            break;
+        case GREATER_THAN_SIGN:
+            strcpy(str, "GTS");
+            break;
+        case QUOTATION_MARK:
+            strcpy(str, "QUM");
+            break;
+        case HTML_IDENTIFIER:
+            strcpy(str, "HTI");
+            break;
+        case HTML_TEXT:
+            strcpy(str, "HTT");
+            break;
+        case EMPTY_TOKEN:
+            strcpy(str, "EPT");
+            break;
+        case HTML_ATTRIBUTE_VALUE:
+            strcpy(str, "HAV");
+            break;
+        case HTML_ATTRIBUTE_KEY:
+            strcpy(str, "HAK");
+            break;
+    }
+
+    return str;
+}
 
 
 int main()
@@ -169,7 +214,7 @@ int main()
     for (int i = 0; i < tokens.space_used; i++)
     {
         Token tok = tokens.tokens[i];
-        print_lexeme(tok);
+        print_token(&tok);
     }
 
     free_tokens_array(&tokens);

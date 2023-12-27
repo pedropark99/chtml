@@ -12,12 +12,14 @@ char* HTML_EXAMPLE = "<!DOCTYPE html>\n"
 
 
 enum TokenType {
-    OPEN_LESS_THAN = 200,
-    CLOSE_LESS_THAN = 201,
+    GREATER_THAN_SIGN = 200,
+    LESSER_THAN_SIGN = 201,
     EQUAL_SIGN = 202,
     QUOTATION_MARK = 203,
     HTML_TEXT = 204,
     HTML_IDENTIFIER = 205,
+    HTML_ATTRIBUTE_KEY = 207,
+    HTML_ATTRIBUTE_VALUE = 208,
     EMPTY_TOKEN = 206
 };
 
@@ -41,7 +43,8 @@ void print_lexeme(Token token);
 
 Token token(int start_index, int end_index, enum TokenType token_type);
 void print_token(Token* token);
-
+char* get_token_lexeme(Token* token);
+char* token_type_to_str(enum TokenType type);
 Token get_last_token(TokensArray* array);
 void init_tokens_array(TokensArray* array, size_t initial_size);
 void insert_token(TokensArray* array, Token token);
