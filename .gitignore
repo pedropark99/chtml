@@ -2,4 +2,6 @@ CMakeFiles/
 CMakeCache.txt
 Makefile
 *.cmake
+chtml
+*.exe
 
