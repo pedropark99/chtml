@@ -19,8 +19,38 @@ void tokenizer(TokensArray* tokens, char* input_string)
 
     bool inside_string = false;
     int lexeme_begin = 0;
+    int current_index = 0;
+    // Tokenize the components of the first HTML element, which is usually <!DOCTYPE html>.
+    if (input_string[current_index] == '<') {
+        insert_token(tokens, token(current_index, current_index, LESSER_THAN_SIGN));
+        lexeme_begin = current_index + 1;
+        current_index++;
+    }
 
-    for (int current_index = 0; current_index < strlen(input_string); current_index++)
+    while (current_index < strlen(input_string))
+    {
+        if (input_string[current_index] == ' ') {
+            insert_token(tokens, token(lexeme_begin, current_index, HTML_IDENTIFIER));
+            lexeme_begin = current_index + 1;
+            current_index++; break;
+        }
+        
+        current_index++;
+    }
+
+    while (current_index < strlen(input_string))
+    {
+        if (input_string[current_index] == '>') {
+            insert_token(tokens, token(lexeme_begin, current_index - 1, DOC_TYPE));
+            insert_token(tokens, token(current_index, current_index, GREATER_THAN_SIGN));
+            lexeme_begin = current_index + 1;
+            current_index++; break;
+        }
+        
+        current_index++;
+    }
+
+    while (current_index < strlen(input_string))
     {
         if (input_string[current_index] == '<') {
             insert_token(tokens, token(current_index, current_index, LESSER_THAN_SIGN));
@@ -98,10 +128,13 @@ void tokenizer(TokensArray* tokens, char* input_string)
             }
         }
 
+
+
+
         if (!inside_string && input_string[current_index] == '\n') {
             insert_token(tokens, token(current_index, current_index, NEW_LINE));
             lexeme_begin = current_index + 1;
-            continue;
+            current_index++; continue;
         }
 
 
@@ -113,7 +146,10 @@ void tokenizer(TokensArray* tokens, char* input_string)
             insert_token(tokens, token(lexeme_begin, current_index, HTML_TEXT));
             lexeme_begin = current_index + 1;
         }
-   }
+
+
+        current_index++;
+    }
 
 }
 
@@ -233,6 +269,9 @@ char* token_type_to_str(enum TokenType type)
             break;
         case NEW_LINE:
             strcpy(str, "NEL");
+            break;
+        case DOC_TYPE:
+            strcpy(str, "DOT");
             break;
     }
 

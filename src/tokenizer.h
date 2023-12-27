@@ -23,6 +23,7 @@ enum TokenType {
     HTML_ATTRIBUTE_VALUE = 208,
     FORWARD_SLASH = 210,
     NEW_LINE = 211,
+    DOC_TYPE = 212,
     EMPTY_TOKEN = 206
 };
 
