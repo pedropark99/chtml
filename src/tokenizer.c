@@ -17,143 +17,154 @@ void tokenizer(TokensArray* tokens, char* input_string)
         printf("[WARN]: Input string seems to be empty!");
     }
 
-    bool inside_string = false;
-    int lexeme_begin = 0;
-    int current_index = 0;
+    TokenizerCache tc = {
+        0, // tc.lexeme_begin
+        0, // tc.current_index
+        false // tc.inside_string
+    };
+
     // Tokenize the components of the first HTML element, which is usually <!DOCTYPE html>.
-    if (input_string[current_index] == '<') {
-        insert_token(tokens, token(current_index, current_index, LESSER_THAN_SIGN));
-        lexeme_begin = current_index + 1;
-        current_index++;
-    }
+    tokenize_first_element(tokens, input_string, &tc);
 
-    while (current_index < strlen(input_string))
+    while (tc.current_index < strlen(input_string))
     {
-        if (input_string[current_index] == ' ') {
-            insert_token(tokens, token(lexeme_begin, current_index, HTML_IDENTIFIER));
-            lexeme_begin = current_index + 1;
-            current_index++; break;
-        }
-        
-        current_index++;
-    }
-
-    while (current_index < strlen(input_string))
-    {
-        if (input_string[current_index] == '>') {
-            insert_token(tokens, token(lexeme_begin, current_index - 1, DOC_TYPE));
-            insert_token(tokens, token(current_index, current_index, GREATER_THAN_SIGN));
-            lexeme_begin = current_index + 1;
-            current_index++; break;
-        }
-        
-        current_index++;
-    }
-
-    while (current_index < strlen(input_string))
-    {
-        if (input_string[current_index] == '<') {
-            insert_token(tokens, token(current_index, current_index, LESSER_THAN_SIGN));
-            lexeme_begin = current_index + 1;
+        if (input_string[tc.current_index] == '<') {
+            insert_token(tokens, token(tc.current_index, tc.current_index, LESSER_THAN_SIGN));
+            tc.lexeme_begin = tc.current_index + 1;
             // Advance to the next space, to get the HTML element identifier
-            while (current_index < strlen(input_string))
+            while (tc.current_index < strlen(input_string))
             {
-                if (input_string[current_index] == ' '
-                    || input_string[current_index] == '>'
-                    || input_string[current_index] == '/') {
+                if (input_string[tc.current_index] == ' '
+                    || input_string[tc.current_index] == '>'
+                    || input_string[tc.current_index] == '/') {
 
                     break;
                 }
-                current_index++;
+                tc.current_index++;
             }
-            insert_token(tokens, token(lexeme_begin, current_index - 1, HTML_IDENTIFIER));
-            lexeme_begin = current_index + 1;
+            insert_token(tokens, token(tc.lexeme_begin, tc.current_index - 1, HTML_IDENTIFIER));
+            tc.lexeme_begin = tc.current_index + 1;
 
-            if (input_string[current_index] == '>')
+            if (input_string[tc.current_index] == '>')
             {
-                insert_token(tokens, token(current_index, current_index, GREATER_THAN_SIGN));
-                lexeme_begin = current_index + 1;
+                insert_token(tokens, token(tc.current_index, tc.current_index, GREATER_THAN_SIGN));
+                tc.lexeme_begin = tc.current_index + 1;
                 continue;
             }
 
             // Tokenize the remainder of the current HTML element
-            while (current_index < strlen(input_string))
+            while (tc.current_index < strlen(input_string))
             {
-                if (!inside_string && input_string[current_index] == '>') {
-                    insert_token(tokens, token(current_index, current_index, GREATER_THAN_SIGN));
-                    lexeme_begin = current_index + 1;
+                if (!tc.inside_string && input_string[tc.current_index] == '>') {
+                    insert_token(tokens, token(tc.current_index, tc.current_index, GREATER_THAN_SIGN));
+                    tc.lexeme_begin = tc.current_index + 1;
                     break;
                 }
 
-                if (inside_string) {
-                    if (input_string[current_index] == '"') {
-                        insert_token(tokens, token(lexeme_begin, current_index - 1, HTML_TEXT));
-                        insert_token(tokens, token(current_index, current_index, QUOTATION_MARK));
-                        lexeme_begin = current_index + 1;
-                        inside_string = false;
+                if (tc.inside_string) {
+                    if (input_string[tc.current_index] == '"') {
+                        insert_token(tokens, token(tc.lexeme_begin, tc.current_index - 1, HTML_TEXT));
+                        insert_token(tokens, token(tc.current_index, tc.current_index, QUOTATION_MARK));
+                        tc.lexeme_begin = tc.current_index + 1;
+                        tc.inside_string = false;
                     }
 
-                    current_index++; continue;
+                    tc.current_index++; continue;
                 }
 
 
 
-                if (!inside_string && input_string[current_index] == '=') {
-                    insert_token(tokens, token(current_index, current_index, EQUAL_SIGN));
-                    lexeme_begin = current_index + 1;
-                    current_index++; continue;
+                if (!tc.inside_string && input_string[tc.current_index] == '=') {
+                    insert_token(tokens, token(tc.current_index, tc.current_index, EQUAL_SIGN));
+                    tc.lexeme_begin = tc.current_index + 1;
+                    tc.current_index++; continue;
                 }
-                if (!inside_string && input_string[current_index] == '/') {
-                    insert_token(tokens, token(current_index, current_index, FORWARD_SLASH));
-                    lexeme_begin = current_index + 1;
-                    current_index++; continue;                  
+                if (!tc.inside_string && input_string[tc.current_index] == '/') {
+                    insert_token(tokens, token(tc.current_index, tc.current_index, FORWARD_SLASH));
+                    tc.lexeme_begin = tc.current_index + 1;
+                    tc.current_index++; continue;                  
                 }
-                if (!inside_string && input_string[current_index] == '"') {
-                    inside_string = true;
-                    insert_token(tokens, token(lexeme_begin, current_index, QUOTATION_MARK));
-                    lexeme_begin = current_index + 1;
-                    current_index++; continue;
+                if (!tc.inside_string && input_string[tc.current_index] == '"') {
+                    tc.inside_string = true;
+                    insert_token(tokens, token(tc.lexeme_begin, tc.current_index, QUOTATION_MARK));
+                    tc.lexeme_begin = tc.current_index + 1;
+                    tc.current_index++; continue;
                 }
 
-                if (!inside_string 
-                    && (current_index + 1) < strlen(input_string)
-                    && input_string[current_index + 1] == '=') {
-                    
-                    insert_token(tokens, token(lexeme_begin, current_index, HTML_ATTRIBUTE_KEY));
-                    lexeme_begin = current_index + 1;
-                    current_index++; continue;
+                if (!tc.inside_string 
+                    && (tc.current_index + 1) < strlen(input_string)
+                    && input_string[tc.current_index + 1] == '=') {
+
+                    insert_token(tokens, token(tc.lexeme_begin, tc.current_index, HTML_ATTRIBUTE_KEY));
+                    tc.lexeme_begin = tc.current_index + 1;
+                    tc.current_index++; continue;
                 }
-                    
-                current_index++;
+
+                tc.current_index++;
             }
         }
 
 
 
 
-        if (!inside_string && input_string[current_index] == '\n') {
-            insert_token(tokens, token(current_index, current_index, NEW_LINE));
-            lexeme_begin = current_index + 1;
-            current_index++; continue;
+        if (!tc.inside_string && input_string[tc.current_index] == '\n') {
+            insert_token(tokens, token(tc.current_index, tc.current_index, NEW_LINE));
+            tc.lexeme_begin = tc.current_index + 1;
+            tc.current_index++; continue;
         }
 
 
-        if (!inside_string 
-            && (current_index + 1) < strlen(input_string)
-            && input_string[current_index + 1] == '<') {
-            
+        if (!tc.inside_string 
+            && (tc.current_index + 1) < strlen(input_string)
+            && input_string[tc.current_index + 1] == '<') {
+
             // Text content of a HTML element
-            insert_token(tokens, token(lexeme_begin, current_index, HTML_TEXT));
-            lexeme_begin = current_index + 1;
+            insert_token(tokens, token(tc.lexeme_begin, tc.current_index, HTML_TEXT));
+            tc.lexeme_begin = tc.current_index + 1;
         }
 
 
-        current_index++;
+        tc.current_index++;
     }
 
 }
 
 
+
+
+
+void tokenize_first_element(TokensArray* tokens, char* input_string, TokenizerCache* tc)
+{
+    advance_to_next_char(tc, '<', input_string);
+    insert_token(tokens, token(tc->current_index, tc->current_index, LESSER_THAN_SIGN));
+    tc->lexeme_begin = tc->current_index + 1;
+    tc->current_index++; 
+
+    advance_to_next_char(tc, ' ', input_string);
+    insert_token(tokens, token(tc->lexeme_begin, tc->current_index, HTML_IDENTIFIER));
+    tc->lexeme_begin = tc->current_index + 1;
+    tc->current_index++; 
+
+    advance_to_next_char(tc, '>', input_string);
+    insert_token(tokens, token(tc->lexeme_begin, tc->current_index - 1, DOC_TYPE));
+    insert_token(tokens, token(tc->current_index, tc->current_index, GREATER_THAN_SIGN));
+    tc->lexeme_begin = tc->current_index + 1;
+    tc->current_index++;
+}
+
+
+
+
+void advance_to_next_char(TokenizerCache* tc, char chr, char* input_string)
+{
+    while (tc->current_index < strlen(input_string))
+    {
+        if (input_string[tc->current_index] == chr) {
+            break;
+        }
+        tc->current_index++;
+    }
+}
 
 
 
@@ -166,6 +177,12 @@ Token token(int start_index, int end_index, enum TokenType token_type)
 }
 
 
+
+
+
+
+
+
 void init_tokens_array(TokensArray* array, size_t initial_size)
 {
     array->tokens = malloc(initial_size * sizeof(Token));
@@ -175,11 +192,11 @@ void init_tokens_array(TokensArray* array, size_t initial_size)
 
 void insert_token(TokensArray* array, Token token) 
 {
-  if (array->space_used == array->size) {
-    array->size *= 2;
-    array->tokens = realloc(array->tokens, array->size * sizeof(Token));
-  }
-  array->tokens[array->space_used++] = token;
+    if (array->space_used == array->size) {
+        array->size *= 2;
+        array->tokens = realloc(array->tokens, array->size * sizeof(Token));
+    }
+    array->tokens[array->space_used++] = token;
 }
 
 void free_tokens_array(TokensArray* array)
@@ -190,15 +207,11 @@ void free_tokens_array(TokensArray* array)
     array->size = 0;
 }
 
-Token get_last_token(TokensArray* array)
-{
-    if (array->space_used == 0) {
-        Token tok = {0, 0, EMPTY_TOKEN};
-        return tok;
-    }
 
-    return array->tokens[array->space_used - 1];
-}
+
+
+
+
 
 
 void print_token(Token *token)
@@ -277,6 +290,11 @@ char* token_type_to_str(enum TokenType type)
 
     return str;
 }
+
+
+
+
+
 
 
 int main()

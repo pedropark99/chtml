@@ -27,6 +27,11 @@ enum TokenType {
     EMPTY_TOKEN = 206
 };
 
+typedef struct {
+    int lexeme_begin;
+    int current_index;
+    bool inside_string;
+} TokenizerCache;
 
 typedef struct {
     int start_index;
@@ -43,13 +48,18 @@ typedef struct {
 
 int char_is_delimiter(char input_char);
 
-void print_lexeme(Token token);
+void tokenize_first_element(TokensArray* tokens, char* input_string, TokenizerCache* tc);
+void advance_to_next_char(TokenizerCache* tc, char chr, char* input_string);
 
+
+void print_lexeme(Token token);
 Token token(int start_index, int end_index, enum TokenType token_type);
 void print_token(Token* token);
 char* get_token_lexeme(Token* token);
 char* token_type_to_str(enum TokenType type);
 Token get_last_token(TokensArray* array);
+
+
 void init_tokens_array(TokensArray* array, size_t initial_size);
 void insert_token(TokensArray* array, Token token);
 void free_tokens_array(TokensArray* array);
