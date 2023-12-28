@@ -7,6 +7,7 @@ char* HTML_EXAMPLE = "<!DOCTYPE html>\n"
     "  <meta charset=\"utf-8\">\n" 
     "  <meta name=\"description\" content=\"Neovim user documentation\">\n"
     "  <title>Welcome to Neovim user documentation!<title/>\n"
+    "  <meta author=\"Pedro \\\"Duarte\\\" Faria\">"
     "<head/>\n"
     "<html/>\n\0"
 ;
