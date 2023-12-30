@@ -7,6 +7,17 @@
 
 #define DEFAULT_TOKENS_ARRAY_SIZE 450
 
+char* HTML_EXAMPLE = "<!DOCTYPE html>\n"
+    "<html>\n"
+    "<head>\n"
+    "  <meta charset=\"utf-8\">\n" 
+    "  <meta name=\"description\" content=\"Neovim user documentation\">\n"
+    "  <title>Welcome to Neovim user documentation!<title/>\n"
+    "  <meta author=\"Pedro \\\"Duarte\\\" Faria\">"
+    "<head/>\n"
+    "<html/>\n\0"
+;
+
 
 
 void tokenizer(TokensArray* tokens, char* input_string)
@@ -223,9 +234,9 @@ void free_tokens_array(TokensArray* array)
 
 /* Print tokens data */
 
-void print_token(Token *token)
+void print_token(Token *token, char* input_string)
 {
-    char* text = get_token_lexeme(token);
+    char* text = get_token_lexeme(token, input_string);
     printf(
         "[Token]: start=%d, end=%d, type=%s, content=%s\n", 
         token->start_index, 
@@ -236,21 +247,21 @@ void print_token(Token *token)
     free(text);
 }
 
-char* get_token_lexeme(Token* token)
+char* get_token_lexeme(Token* token, char* input_string)
 {
     int length = token->end_index - token->start_index + 2;
     char* text = malloc(length);
     text[length - 1] = '\0';
     for (int i = 0; i < (length - 1); i++)
     {
-        text[i] = HTML_EXAMPLE[token->start_index + i];
+        text[i] = input_string[token->start_index + i];
     }
     return text;
 }
 
-void print_lexeme(Token token)
+void print_lexeme(Token token, char* input_string)
 {
-    char* text = get_token_lexeme(&token);
+    char* text = get_token_lexeme(&token, input_string);
     printf("Token content: %s\n", text);
     free(text);
 }
@@ -305,7 +316,7 @@ char* token_type_to_str(enum TokenType type)
 
 
 
-
+/*
 int main()
 {
     printf("[Input]:\n%s\n\n", HTML_EXAMPLE);
@@ -317,9 +328,10 @@ int main()
     for (int i = 0; i < tokens.space_used; i++)
     {
         Token tok = tokens.tokens[i];
-        print_token(&tok);
+        print_token(&tok, HTML_EXAMPLE);
     }
 
     free_tokens_array(&tokens);
     return 1; 
 }
+*/
